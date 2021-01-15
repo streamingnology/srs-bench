@@ -1,0 +1,38 @@
+Linux下查看程序状态: top
+
+sb_rtmp_publish使用,参考 https://www.cnblogs.com/lidabo/p/10275856.html   
+
+ffmpeg -re -i ~/Downloads/demo.flv -c copy -f flv rtmp://127.0.0.1/app/demo
+./sb_rtmp_publish -i ~/Downloads/demo.flv -c 1 -r rtmp://127.0.0.1/app/demo
+./sb_rtmp_publish -i ~/Downloads/demo.flv -c 10 -r rtmp://127.0.0.1/app/littleeurope_{i}
+
+
+编译过程中遇到的问题:
+1. http-parser 编译失败
+cd ~ && git clone https://github.com/ossrs/srs && cd srs/trunk
+./configure && make
+
+===> configure FAILS -- update http-parser source zip file
+
+mkdir temp
+cd temp
+unzip ../http-parser-2.1.zip
+grep -n "FALLT" ./http-parser-2.1/http_parser.c
+sed -e s/FALLTROUGH/FALLTHROUGH/ -i ./http-parser-2.1/http_parser.c
+grep -n "FALLT" ./http-parser-2.1/http_parser.c
+mv ../http-parser-2.1.zip ../http-parser-2.1-orig.zip
+zip ../http-parser-2.1.zip http-parser-2.1/*
+
+===> back to srs/trunk folder to configure and make
+
+cd ../..
+./configure && make
+
+
+2.  https://github.com/ossrs/srs-bench/issues/15
+又尝试了下，发现改错文件了。
+应该是修改 objs/Makefile 按照你的建议修改，可以编译通过了。感谢帮助！
+
+sb_hls_load: objs/sb_hls_load
+objs/sb_hls_load: objs/src/main/htl_main_hls_load.o objs/src/core/htl_core_log.o objs/src/core/htl_core_error.o objs/src/core/htl_core_uri.o objs/src/core/htl_core_aggregate_ret.o objs/src/os/htl_os_st.o objs/src/app/htl_app_hls_load.o objs/src/app/htl_app_http_load.o objs/src/app/htl_app_http_client.o objs/src/app/htl_app_rtmp_play.o objs/src/app/htl_app_m3u8_parser.o objs/src/app/htl_app_task_base.o objs/src/app/htl_app_rtmp_load.o objs/src/app/htl_app_rtmp_protocol.o objs/src/app/htl_app_rtmp_publish.o objs/src/app/htl_app_srs_hijack.o
+    $(LINK)  -o objs/sb_hls_load objs/src/main/htl_main_hls_load.o objs/src/core/htl_core_log.o objs/src/core/htl_core_error.o objs/src/core/htl_core_uri.o objs/src/core/htl_core_aggregate_ret.o objs/src/os/htl_os_st.o objs/src/app/htl_app_hls_load.o objs/src/app/htl_app_http_load.o objs/src/app/htl_app_http_client.o objs/src/app/htl_app_rtmp_play.o objs/src/app/htl_app_m3u8_parser.o objs/src/app/htl_app_task_base.o objs/src/app/htl_app_rtmp_load.o objs/src/app/htl_app_rtmp_protocol.o objs/src/app/htl_app_rtmp_publish.o objs/src/app/htl_app_srs_hijack.o objs/st-1.9/obj/libst.a objs/http-parser-2.1/libhttp_parser.a -ldl
